@@ -38,13 +38,9 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         String token = authService.login(request);
         
-        Cookie cookie = new Cookie("jwt", token);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false); // Should be true in production HTTPS
-        cookie.setPath("/");
-        cookie.setMaxAge(jwtExpiration / 1000); // Max-Age takes seconds
+        String cookieHeader = String.format("jwt=%s; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=%d", token, jwtExpiration / 1000);
+        response.addHeader("Set-Cookie", cookieHeader);
         
-        response.addCookie(cookie);
         return ResponseEntity.ok(new AuthResponse("Login successful"));
     }
 
@@ -63,12 +59,8 @@ public class AuthController {
         
         authService.logout(token);
         
-        Cookie cookie = new Cookie("jwt", null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+        String cookieHeader = "jwt=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0";
+        response.addHeader("Set-Cookie", cookieHeader);
         
         return ResponseEntity.ok(new AuthResponse("Logout successful"));
     }
